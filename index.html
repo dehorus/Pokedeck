@@ -1,25 +1,128 @@
 <!DOCTYPE html>
 <html lang="en">
+
 <head>
     <meta charset="UTF-8">
     <meta http-equiv="X-UA-Compatible" content="IE=edge">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>PokemonApi</title>
+    <link rel="shortcut icon" href="assets/pokeapi_256.png" type="image/x-icon">
+    <link rel="preconnect" href="https://fonts.gstatic.com">
+    <link href="https://fonts.googleapis.com/css2?family=Press+Start+2P&display=swap" rel="stylesheet">
     <style>
-        .loader{
+        * {
+            margin: 0;
+            padding: 0;
+            font-family: 'Press Start 2P', cursive;
+        }
+
+        header {
+            background-color: #FF0000;
+            height: 23vh;
+        }
+
+        #logo {
+            display: block;
+            margin: auto;
+            padding-top: 2rem;
+        }
+
+        .container {
+            width: 80%;
+            margin: 0 auto;
+        }
+
+        .loader {
             display: block;
             margin: 0 auto;
         }
+
+        .fluid-grid {
+            margin-top: 1em;
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
+            column-gap: 1rem;
+            row-gap: 1rem;
+        }
+
+        figure {
+            width: 80%;
+            margin: 0 auto;
+        }
+
+        figure img {
+            width: 260px;
+            height: 260px;
+            display: block;
+            margin: 0 auto;
+        }
+
+        figure figcaption h2 {
+            text-align: center;
+            font-size: 1em;
+            cursor: pointer;
+            border-bottom: solid 1px transparent;
+            transition: 0.5s;
+            margin-top: 0.5em;
+        }
+
+        figure figcaption h2:hover {
+            border-bottom: solid 1px black;
+        }
+
+        form {
+            display: block;
+            width: 80%;
+            height: 2.5em;
+            margin: 1em auto;
+            display: flex;
+            justify-content: center;
+        }
+
+        form input {
+            height: 100%;
+            display: block;
+            margin: 0 auto;
+        }
+
+        form input[placeholder] {
+            text-align: center;
+        }
+
+        .links {
+            display: flex;
+            width: 60%;
+            margin: 0 auto;
+        }
+
+        .links a {
+            display: block;
+            margin: 0 auto;
+            font-size: 2em;
+        }
     </style>
 </head>
+
 <body>
-    <h1>Pokemons</h1>
+    <header class="poke-header">
+        <div class="container">
+            <img id="logo" src="assets/pokeapi_256.png" alt="poke-logo">
+        </div>
+        <form id="search-form">
+            <input id="buscar" name="search" type="search" placeholder="ex..Pikachu">
+            <input type="submit" value="Buscar...">
+        </form>
+    </header>
     <nav class="links"></nav>
-    <main class="fluid-grid"></main>
+    <div class="container">
+        <main class="fluid-grid"></main>
+    </div>
     <script>
         const d = document,
             $main = d.querySelector('main'),
-            $links = d.querySelector('.links');
+            $links = d.querySelector('.links'),
+            $input = d.querySelector("#buscar"),
+            $form = d.getElementById('search-form');
 
         async function loadPokemons(url) {
             try {
@@ -30,41 +133,57 @@
                     $template = "",
                     $prevlink,
                     $nextlink;
-                    
+
                 console.log(json);
-                
-                if(!res.ok) throw { status: res.status, statusText: res.statusText}
+
+                if (!res.ok) throw { status: res.status, statusText: res.statusText }
 
                 for (let i = 0; i < json.results.length; i++) {
                     //console.log(json.results[i]);
 
                     try {
-                      let res = await fetch(json.results[i].url),
-                        pokemon = await res.json();
-                        
-                        console.log(pokemon, res);
-                        if(!res.ok) throw { status: res.status, statusText: res.statusText}
+                        let res = await fetch(json.results[i].url),
+                            pokemon = await res.json();
+
+                        console.log(pokemon);
+                        if (!res.ok) throw { status: res.status, statusText: res.statusText }
 
                         $template += `
                             <figure>
-                                <img src= "${pokemon.sprites.front_default}" alt="pokemon ${pokemon.name}">
-                                <figcaption> ${pokemon.name}</figcaption>
+                                <img src= "${pokemon.sprites.other.dream_world.front_default}" alt="pokemon ${pokemon.name}">
+                                <figcaption> <h2> ${pokemon.name} </h2> </figcaption>
                             </figure>
                         `
                     } catch (err) {
                         let message = error.statusText || "Error al cargar los datos"
-                $template.innerHTML = `<p>Error ${error.status}: ${message}</p>`
+                        $template.innerHTML = `<p>Error ${error.status}: ${message}</p>`
                     }
                 }
 
                 $main.innerHTML = $template;
+                $prevlink = json.previous ? `<a href="${json.next}">⏮️</a>` : "";
+                $nextlink = json.next ? `<a href="${json.next}">⏭️</a>` : "";
+                $links.innerHTML = $prevlink + " " + $nextlink;
             } catch (error) {
                 let message = error.statusText || "Error al cargar los datos"
                 $main.innerHTML = `<p>Error ${error.status}: ${message}</p>`
             }
         }
 
-        d.addEventListener('DOMContentLoaded', e => loadPokemons('https://pokeapi.co/api/v2/pokemon/'));    
+        d.addEventListener('DOMContentLoaded', e => loadPokemons('https://pokeapi.co/api/v2/pokemon/'));
+        $form.addEventListener('submit', (e) => {
+            e.preventDefault();
+            let pokemonsearch = $input.value;
+            console.log(pokemonsearch);
+        });
+        d.addEventListener('click', (e) => {
+            if (e.target.matches(".links a")) {
+                e.preventDefault();
+                alert("Funciona");
+                loadPokemons(e.target.getAttribute("href"));
+            }
+        })
     </script>
 </body>
+
 </html>
