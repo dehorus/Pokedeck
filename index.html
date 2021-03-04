@@ -16,6 +16,10 @@
             font-family: 'Press Start 2P', cursive;
         }
 
+        body {
+            background-color: #FF0000;
+        }
+
         header {
             background-color: #FF0000;
             height: 23vh;
@@ -45,6 +49,11 @@
             row-gap: 1rem;
         }
 
+        main {
+            background-color: white;
+            margin-bottom: 5em;
+        }
+
         figure {
             width: 80%;
             margin: 0 auto;
@@ -61,15 +70,18 @@
             text-align: center;
             font-size: 1em;
             cursor: pointer;
-            border-bottom: solid 1px transparent;
+            background-color: white;
             transition: 0.5s;
-            margin-top: 0.5em;
+            margin-top: 1em;
             color: black;
             text-decoration: none;
+            margin-left: 4em;
+            margin-bottom: 1em;
         }
 
         figure figcaption a:hover {
-            border-bottom: solid 1px black;
+            background-color: black;
+            color: white;
         }
 
         form {
@@ -95,12 +107,25 @@
             display: flex;
             width: 60%;
             margin: 0 auto;
+            background-color: white;
         }
 
         .links a {
             display: block;
             margin: 0 auto;
             font-size: 2em;
+        }
+
+        .pokemon-data {
+            margin: 5em auto;
+        }
+
+        .pokemon-data h2 {
+            margin: 2em 0;
+        }
+
+        .pokemon-data h3 {
+            margin: 1em 0;
         }
     </style>
 </head>
@@ -161,24 +186,50 @@
                 $main.innerHTML = `<p>Error ${error.status}: ${message}</p>`
             }
         }
-
-        async function dataPokemon(url) {
-            $main.innerHTML = `<img class="loader" src= "./assets/loader.svg" alt="cargando...">`;
+        async function getAbilities(url) {
             try {
                 let res = await fetch(url),
                     json = await res.json();
                 if (!res.ok) throw { status: res.status, statusText: res.statusText }
-                console.log(json);
+                $title = d.querySelector('.poke-abilities-title');
+                $title.insertAdjacentHTML('afterend', `
+                    <div>
+                        <h3>${json.name}</h3>
+                        <p> English/Aleman? <hr> ${json.effect_entries[0].effect}</p><br>
+                        <p> English/Aleman? <hr> ${json.effect_entries[1].effect}</p>
+                    </div>
+                `);
+            } catch (error) {
+                let message = error.statusText || "Error al cargar los datos de tus Habilidades"
+                $main.innerHTML = `<p>Error ${error.status}: ${message}</p>`
+            }
+        }
+
+        async function dataPokemon(url) {
+            $main.innerHTML = `<img class="loader" src= "./assets/loader.svg" alt="cargando...">`;
+            let $prevlink;
+            $prevlink = `<a class="go-back" href="#">⏮️</a>`
+            $links.innerHTML = $prevlink;
+            d.addEventListener('click', e => {
+                if (e.target.matches('.go-back')) {
+                    e.preventDefault();
+                    loadPokemons('https://pokeapi.co/api/v2/pokemon/');
+                }
+            });
+            try {
+                let res = await fetch(url),
+                    json = await res.json();
+                if (!res.ok) throw { status: res.status, statusText: res.statusText }
                 let pokemon = json;
-                console.log(pokemon.abilities)
-                $main.innerHTML = `<figure>
+                $main.innerHTML = `<figure class="pokemon-data">
                         <img class="poke-animated" src="${pokemon.sprites.versions["generation-v"]["black-white"].animated.front_default}" alt="${pokemon.name}">
                         <h2>${pokemon.name}</h2>
-                        <div clas="poke-info">
-                            <span> Peso: ${pokemon.height} kg</span>
-                            <span> Habilidad 1: ${pokemon.abilities[0].ability.name}
-                        </div>
-                    </figure>`
+                        <div class="poke-info">
+                            <span class="poke-height"> Peso: ${pokemon.height} kg</span>
+                            <h2 class="poke-abilities-title">Habilidades</h2>`
+                for (let i = 0; i < pokemon.abilities.length; i++) {
+                    getAbilities(pokemon.abilities[i].ability.url);
+                }
             } catch (error) {
                 let message = error.statusText || "Error al cargar los datos de tu Pokemon"
                 $main.innerHTML = `<p>Error ${error.status}: ${message}</p>`
